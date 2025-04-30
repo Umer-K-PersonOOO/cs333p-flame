@@ -1,0 +1,524 @@
+ 
+\documentclass[12pt]{article}
+
+
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{ifthen}
+\usepackage[table]{xcolor}
+\usepackage{minitoc}
+\usepackage{array}
+\usepackage{graphicx}
+
+\definecolor{yellow}{cmyk}{0,0,1,0}
+\renewcommand{\arraystretch}{1.4}
+\newcommand{\R}{\mathbb{R}}
+
+\usepackage{colortbl}
+\usepackage[top=0.75in, bottom=0.75in, left=1.25in, right=1.25in]{geometry}
+
+%% Page size
+%\setlength{\oddsidemargin}{13pt}
+%%\setlength{\evensidemargin}{-0.5in}
+%\setlength{\textheight}{674pt}
+%\setlength{\textwidth}{426pt}
+%\setlength{\topmargin}{-10pt}
+%\setlength{\voffset}{-30pt}
+
+\renewcommand{\arraycolsep}{3pt}
+
+
+\input{color_flatex}
+
+
+% Page size
+%\setlength{\oddsidemargin}{-0.25in}
+%\setlength{\evensidemargin}{-0.25in}
+%\setlength{\textheight}{9.25in}
+%\setlength{\textwidth}{7in}
+%\setlength{\topmargin}{-0.5in}
+
+
+% ----------------------------------------------------------------
+\title{HPC Final \\ CS 378 Programming for Correctness and Performance}
+
+\author{Umer Khan, Ahmad Raeq Ahsen, Saood Usmani}
+
+\begin{document}
+	\maketitle
+
+\section{Operation}
+
+Consider the operation
+\[
+B := L^T B 
+\]
+where $ L^T $ is a $ m \times m $ lower triangular matrix that will be transposed and behave like an upper triangle and $ B $ is a $ m \times n $ matrix.
+This is a special case of  
+matrix-matrix multiplication, 
+with the {\sc l}ower triangular matrix on the {\sc l}eft, 
+We will refer to this operation
+as {\sc Trmm\_lltn} where the {\sc lltn} stands for
+\underline{l}eft
+\underline{l}ower
+\underline{t}ranspose
+\underline{n}onunit diagonal.
+The {\sc n}onunit diagonal means we will use the entries of the matrix that are stored on the diagonal.  In some other cases, the entries on the diagonal may implicitly be taked to all equal one ({\sc u}nit).
+
+\section{Precondition and Postcondition}
+
+In the precondition 
+\[
+B = \widehat B
+\]
+$ \widehat B $ denotes the original contents of $ B $.
+This allows us to express the state upon completion, the postcondition, as
+\[
+B = L^T \widehat B.
+\]
+It is implicitly assumed that $ L $ is nonunit lower triangular.
+\section{Partitioned Matrix Expressions and Loop Invariants}
+
+There are two PMEs for this operation.
+
+\subsection{PME 1}
+
+To derive the first PME, partition
+\[
+L \rightarrow
+\left(\begin{array}{c I c}
+	L_{TL} & L_{BL}^T \\ \whline
+	0 & L_{BR}
+\end{array}\right)
+,
+\quad \mbox{and} \quad
+B \rightarrow 
+\left(\begin{array}{c}
+	B_T \\ \whline
+	B_B
+\end{array}\right).
+\]
+Substituting these into the postcondition
+yields
+\[
+\left(\begin{array}{c}
+	B_T \\ \whline
+	B_B
+\end{array}\right)
+=
+\left(\begin{array}{c I c}
+	L_{TL} & L_{BL}^T \\ \whline
+	0 & L_{BR}
+\end{array}\right)
+\left(\begin{array}{c}
+	\widehat B_T \\ \whline
+	\widehat B_B
+\end{array}\right)
+\]
+or, equivalently,
+\[
+\left(\begin{array}{c}
+	B_T \\ \whline
+	B_B
+\end{array}\right)
+=
+\left(\begin{array}{c}
+	L_{TL} \widehat B_T + L_{BL}^T \widehat B_B \\ \whline
+	L_{BR} \widehat B_B
+\end{array}\right),
+\]
+which we refer to as the first PME for this operations.
+
+From this, we can choose two loop invariants:
+\begin{description}
+	\item
+	{\bf Invariant 1:}
+\begin{equation}
+	\left(\begin{array}{c}
+		B_T \\ \whline
+		B_B
+	\end{array}\right)
+	= 
+	\left(\begin{array}{c}
+		L_{TR}\widehat B_T \\ \whline
+		\widehat B_B
+	\end{array}\right).	
+\label{eq:inv1}
+\end{equation}	
+ \\
+	(The bottom part has been left alone and the top part has been partially computed).
+	\item
+	{\bf Invariant 2:}
+\begin{equation}
+	\left(\begin{array}{c}
+		B_T \\ \whline
+		B_B
+	\end{array}\right) = 
+	\left(\begin{array}{c}
+		L_{TR} \widehat B_T + (L_{BL}^T)^T \widehat B_B  \\ \whline
+		\widehat B_B
+	\end{array}\right).
+\label{eq:inv2}
+	\end{equation} \\
+	(The bottom part has been left alone and the top part has been completely computed).
+\end{description}
+% TODO: 
+\subsection{PME 2}
+
+To derive the second PME, partition
+\[
+B \rightarrow \left(\begin{array}{c I c}
+	B_L & B_R 
+\end{array}\right)
+\]
+and do not partition $ L^T $.
+Substituting these into the postcondition
+yields
+\[
+\left(\begin{array}{c I c}
+	B_L & B_R 
+\end{array}\right)
+=
+L^T 
+\left(\begin{array}{c I c}
+	\widehat B_L & \widehat B_R 
+\end{array}\right)
+\]
+or, equivalently,
+\[
+\left(\begin{array}{c I c}
+	B_L & B_R 
+\end{array}\right)
+=
+\left(\begin{array}{c I c}
+	L^T \widehat B_L & L^T \widehat B_R 
+\end{array}\right),
+\]
+which we refer to as the second PME.
+
+From this, we can choose two more loop invariants:
+\begin{description}
+	\item
+	{\bf Invariant 3:}
+
+\begin{equation}
+		\left(\begin{array}{c I c}
+		B_L & B_R 
+	\end{array}\right) =
+	\left(\begin{array}{c I c}
+		L^T \widehat B_L & \widehat B_R 
+	\end{array}\right).
+\label{eq:inv3}
+\end{equation}
+\\
+	(The left part has been completely finished and the right part has been left untouched).
+	\item
+	{\bf Invariant 4:}
+	
+\begin{equation}
+		\left(\begin{array}{c I c}
+		B_L & B_R 
+	\end{array}\right) =
+	\left(\begin{array}{c I c}
+		\widehat B_L & L^T \widehat B_R 
+	\end{array}\right).
+\label{eq:inv4}
+\end{equation}\\
+	(The left part has been completely finished and the right part has been left untouched).
+\end{description}
+
+
+\section{Deriving the Algorithms}
+
+\subsection{Loop Invariant \eqref{eq:inv1}}
+
+The unblocked algorithm for loop invariant \eqref{eq:inv3} is showing in Figure~\ref{fig:unb_inv1}. While the blocked algorithm for loop invariant \eqref{eq:inv3} is showing in Figure~\ref{fig:blk_inv3}.
+
+
+\resetsteps
+
+\input{derivations/Trmm_lltn_unb_var1}
+
+\begin{figure}
+	\begin{center}
+		\FlaWorksheet
+	\end{center}
+	\caption{Unblocked Algorithm for Loop Invariant \eqref{eq:inv1}}
+	\label{fig:unb_inv1}
+\end{figure}
+
+
+\resetsteps
+
+\input{derivations/Trmm_lltn_blk_var1}
+
+\begin{figure}
+	\begin{center}
+		\FlaWorksheet
+	\end{center}
+	\caption{Blocked Algorithm for Loop Invariant \eqref{eq:inv1}}
+	\label{fig:blk_inv3}
+\end{figure}
+
+
+\newpage
+
+
+\section{Operation}
+
+Consider the operation  
+\[
+C := A A^T + C
+\]
+where \( A \) is a \( m \times k \) matrix and \( C \) is a \( m \times m \) symmetric matrix, stored in its lower-triangular part. This is a special case of  
+\textit{symmetric rank-\( k \)} update,  
+with the matrix \( A \) on the \textsc{l}eft and its transpose \( A^T \) on the right (And by definition of symmetric, we know that $AA^T$ is symmetric).  
+We refer to this operation as  
+\textsc{Syrk\_ln}, where the \textsc{ln} stands for:
+\begin{itemize}
+  \item \underline{l}eft (the matrix \( A \) is on the left)
+  \item \underline{n}o transpose (the matrix \( A \) is used as-is, without transposition)
+\end{itemize}
+
+This operation updates the symmetric matrix \( C \) using the product \( A A^T \), storing the result only in the lower triangular part to exploit symmetry and save space.
+
+\section{Precondition and Postcondition}
+
+In the precondition 
+\[
+C = \widehat C
+\]
+$ \widehat C $ denotes the original contents of $ C $.
+This allows us to express the state upon completion, the postcondition, as
+\[
+C = A A^T + C
+\]
+\section{Partitioned Matrix Expressions and Loop Invariants}
+
+\subsection{PME 1}
+
+To derive the first PME, partition
+\[
+A \rightarrow
+\left(\begin{array}{c}
+	A_T \\ \whline
+	A_B
+\end{array}\right),
+\quad \text{and} \quad
+\widehat{C} \rightarrow
+\left(\begin{array}{c I c}
+	\widehat{C}_{TL} & \widehat{C}_{BL}^T \\ \whline
+	\widehat{C}_{BL} & \widehat{C}_{BR}
+\end{array}\right).
+\]
+
+Substituting into the postcondition yields
+\[
+C = AA^T + \widehat{C}
+\Rightarrow
+\left(\begin{array}{c I c}
+	C_{TL} & C_{BL}^T \\ \whline
+	C_{BL} & C_{BR}
+\end{array}\right)
+=
+\left(\begin{array}{c}
+	A_T \\ \whline
+	A_B
+\end{array}\right)
+\left(\begin{array}{c}
+	A_T \\ \whline
+	A_B
+\end{array}\right)^T
++
+\left(\begin{array}{c I c}
+	\widehat{C}_{TL} & \widehat{C}_{BL}^T \\ \whline
+	\widehat{C}_{BL} & \widehat{C}_{BR}
+\end{array}\right)
+\]
+
+Evaluating the multiplication yields:
+\[
+\left(\begin{array}{c I c}
+	C_{TL} & C_{BL}^T \\ \whline
+	C_{BL} & C_{BR}
+\end{array}\right)
+=
+\left(\begin{array}{c I c}
+	A_T A_T^T + \widehat{C}_{TL} & A_T A_B^T + \widehat{C}_{BL}^T \\ \whline
+	A_B A_T^T + \widehat{C}_{BL} & A_B A_B^T + \widehat{C}_{BR}
+\end{array}\right)
+\]
+
+This is the first PME for the operation.
+
+\begin{description}
+  \item
+  \textbf{Invariant 1:}
+  \begin{equation}
+    \left(\begin{array}{c I c}
+      C_{TL} & C_{BL}^T \\ \whline
+      C_{BL} & C_{BR}
+    \end{array}\right)
+    =
+    \left(\begin{array}{c I c}
+      A_T A_T^T + \widehat{C}_{TL} & \widehat{C}_{BL}^T \\ \whline
+      \widehat{C}_{BL} & \widehat{C}_{BR}
+    \end{array}\right)
+  \label{eq:inv1}
+  \end{equation}
+  \\
+  (Only the top-left block has been  updated.)
+
+  \item
+  \textbf{Invariant 2:}
+  \begin{equation}
+    \left(\begin{array}{c I c}
+      C_{TL} & C_{BL}^T \\ \whline
+      C_{BL} & C_{BR}
+    \end{array}\right)
+    =
+    \left(\begin{array}{c I c}
+      A_T A_T^T + \widehat{C}_{TL} & A_T A_B^T + \widehat{C}_{BL}^T \\ \whline
+      A_B A_T^T + \widehat{C}_{BL} & \widehat{C}_{BR}
+    \end{array}\right)
+  \label{eq:inv2}
+  \end{equation}
+  \\
+  (The entire top row and left column have been fully updated.)
+
+  \item
+  \textbf{Invariant 3:}
+  \begin{equation}
+    \left(\begin{array}{c I c}
+      C_{TL} & C_{BL}^T \\ \whline
+      C_{BL} & C_{BR}
+    \end{array}\right)
+    =
+    \left(\begin{array}{c I c}
+      \widehat{C}_{TL} & \widehat{C}_{BL}^T \\ \whline
+      \widehat{C}_{BL} & A_B A_B^T + \widehat{C}_{BR}
+    \end{array}\right)
+  \label{eq:inv3}
+  \end{equation}
+  \\
+  (Only the bottom-right block has been updated.)
+
+  \item
+  \textbf{Invariant 4:}
+  \begin{equation}
+    \left(\begin{array}{c I c}
+      C_{TL} & C_{BL}^T \\ \whline
+      C_{BL} & C_{BR}
+    \end{array}\right)
+    =
+    \left(\begin{array}{c I c}
+      \widehat{C}_{TL} & A_T A_B^T + \widehat{C}_{BL}^T \\ \whline
+      A_B A_T^T + \widehat{C}_{BL} & A_B A_B^T + \widehat{C}_{BR}
+    \end{array}\right)
+  \label{eq:inv4}
+  \end{equation}
+  \\
+  (The entire bottom row and right column have been updated, leaving the top-left untouched.)
+\end{description}
+
+\subsection{PME 2}
+
+To derive the second PME, partition
+\[
+A \rightarrow \left(\begin{array}{c I c}
+	A_L & A_R 
+\end{array}\right)
+\]
+and do not partition \( \widehat{C} \).
+
+Substituting this into the postcondition yields
+\[
+C = A A^T + \widehat{C}
+\Rightarrow
+C =
+\left(\begin{array}{c I c}
+	A_L & A_R 
+\end{array}\right)
+\left(\begin{array}{c}
+	A_L^T \\ \whline
+	A_R^T 
+\end{array}\right)
++
+\widehat{C}
+\]
+
+Evaluating the matrix product gives:
+\[
+C = A_L A_L^T + A_R A_R^T + \widehat{C}
+\]
+
+This expression is referred to as the second PME for this operation.
+
+
+From this, we can choose two more loop invariants:
+\begin{description}
+	\item
+	{\bf Invariant 5:}
+
+\begin{equation}
+		C = A_L A_L^T + \widehat{C}
+\label{eq:inv5}
+\end{equation}
+\\
+	(All of C is being partially computed on A moves from left to right).
+\item
+{\bf Invariant 6:}
+	
+\begin{equation}
+		C = A_R A_R^T + \widehat{C}
+\label{eq:inv6}
+\end{equation}\\
+	(All of C is being partially computed on A moves from right to left).
+\end{description}
+
+
+\section{Deriving the Algorithms}
+
+\subsection{Loop Invariant \eqref{eq:inv1}}
+
+The unblocked algorithm for loop invariant \eqref{eq:inv1} is showing in Figure 3. While the blocked algorithm for loop invariant \eqref{eq:inv1} is showing in Figure~\ref{fig:blk_inv1}.
+
+
+
+
+
+
+
+
+
+\input{derivations/Syrk_ln_unb_var1}
+
+\begin{figure}
+	\begin{center}
+		\FlaWorksheet
+	\end{center}
+	\caption{Blocked Algorithm for Loop Invariant \eqref{eq:inv1}}
+	\label{fig:blk_inv1}
+\end{figure}
+
+\input{derivations/Syrk_ln_blk_var1}
+
+\begin{figure}
+	\begin{center}
+		\FlaWorksheet
+	\end{center}
+	\caption{Blocked Algorithm for Loop Invariant \eqref{eq:inv1}}
+	\label{fig:blk_inv1}
+\end{figure}
+
+
+% \begin{figure}
+% \includegraphics[width=\textwidth]{FLAMEC/Plot_unb_GFLOPS.pdf}
+% \caption{Performance of the unblocked algorithm for loop invariant~\ref{eq:inv1} of TRMM}.
+% \label{fig:unbAlg1}
+% \end{figure}
+
+
+
+\end{document}

@@ -1,0 +1,118 @@
+
+\resetsteps      % Reset all the commands to create a blank worksheet  
+
+% Define the operation to be computed
+
+\renewcommand{\operation}{ \left[ B \right] := \mbox{\sc Trmm\_lltn\_blk\_var1}( L, B ) }
+
+\renewcommand{\routinename}{\operation}
+
+% Step 1a: Precondition 
+
+\renewcommand{\precondition}{
+  B = \widehat{B}
+}
+
+% Step 1b: Postcondition 
+
+\renewcommand{\postcondition}{ 
+  \left[B \right]
+  =
+  \mbox{Trmm\_lltn}( L, \widehat{B} )
+}
+
+% Step 2: Invariant 
+% Note: Right-hand side of equalities must be updated appropriately
+
+\renewcommand{\invariant}{
+  \left(\begin{array}{c I c}
+     B_L & B_R
+  \end{array}\right)  = 
+  \left(\begin{array}{c I c}
+     L^T \widehat B_L   & \widehat B_R
+  \end{array}\right)
+}
+
+% Step 3: Loop-guard 
+
+\renewcommand{\guard}{
+  n( B_L ) < n( B )
+}
+
+% Step 4: Initialize 
+
+\renewcommand{\partitionings}{
+  $
+  B \rightarrow
+  \left(\begin{array}{c I c}
+     B_L & B_R
+  \end{array}\right)
+  $
+}
+
+\renewcommand{\partitionsizes}{
+  $ B_L $ has $ 0 $ columns
+}
+
+% Step 5a: Repartition the operands 
+
+\renewcommand{\repartitionings}{
+  $  \left(\begin{array}{c I c}
+     B_L & B_R
+  \end{array}\right)
+  \rightarrow
+  \left(\begin{array}{c I c c}
+     B_0 & B_1 & B_2
+  \end{array}\right)
+  $
+}
+
+\renewcommand{\repartitionsizes}{
+  $ B_1 $ has $ nc $ column}
+
+% Step 5b: Move the double lines 
+
+\renewcommand{\moveboundaries}{
+$  
+  B \rightarrow
+  \left(\begin{array}{c I c c}
+     B_L & B_R
+  \end{array}\right)
+  \leftarrow
+  \left(\begin{array}{c c I c}
+     B_0 & B_1 & B_2
+  \end{array}\right)
+  $
+}
+
+% Step 6: State before update
+% Note: The below needs editing consistent with loop-invariant!!!
+
+\renewcommand{\beforeupdate}{$B = \left(\begin{array}{c I c c}
+     L \widehat B_0 & B_1  B_2
+  \end{array}\right)
+   $}
+
+
+% Step 7: State after update
+% Note: The below needs editing consistent with loop-invariant!!!
+
+\renewcommand{\afterupdate}{$B=\left(\begin{array}{c c I c}
+     L \widehat B_0 & L \widehat B_1 & B_2
+  \end{array}\right)$}
+
+
+% Step 8: Insert the updates required to change the 
+%         state from that given in Step 6 to that given in Step 7
+% Note: The below needs editing!!!
+
+\renewcommand{\update}{
+$
+  \begin{array}{l}          % do not delete this line 
+    
+    \mbox{$B_1 := L B_1$} \\ % replace \mbox{...} with update line but leave 
+  \end{array}               % do not delete this line 
+$
+}
+
+
