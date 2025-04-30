@@ -67,7 +67,6 @@ output.m
 
 
 #latex Files
-*.pdf
 *.aux
 *.out
 *.log
