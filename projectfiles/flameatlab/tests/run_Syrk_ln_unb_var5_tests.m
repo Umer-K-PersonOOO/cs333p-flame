@@ -1,4 +1,4 @@
-% Unit-tests for Syrk_ln_unb_var5( A , A' , C )
+% Unit-tests for Syrk_ln_unb_var5( A , C )
 % The kernel should return  C + A*A'  (lower-storage SYRK).
 % Returns true when every case passes.
 
@@ -17,9 +17,10 @@ cases = { ...
     };
 
 for c = 1:numel(cases)
-    A   = cases{c}.A;    AT = A.';      C0 = cases{c}.C;
-    ref = C0 + A*A.';                       % ground truth
-    res = Syrk_ln_unb_var5(A,AT,C0);        % routine under test
+    A   = cases{c}.A;      C0 = cases{c}.C;
+    C_lower = tril(C0);   % lower-triangular part
+    ref = tril(C0 + A*A.');                       % ground truth
+    res = Syrk_ln_unb_var5(A,C_lower);        % routine under test
     err = max(abs(res(:)-ref(:)));
     pass= err < tol*(1+max(abs(ref(:))));
     ok  = ok && pass;

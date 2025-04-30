@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
 
     i = 1;
     for (n = nfirst; n <= nlast; n += ninc) {
-
+        printf("(%d, 1:0) = [size, speed, error ];\n", i);
+        fflush(stdout);
         // SYRK TESTS 
 
         /* Create matrices for SYRK */
@@ -59,7 +60,7 @@ int main(int argc, char *argv[])
         FLA_Obj_create(FLA_DOUBLE, n, n, 0, 0, &Cref);
 
         FLA_Random_matrix(Aobj);
-        FLA_Random_matrix(Cold);
+        FLA_Random_symm_matrix(FLA_LOWER_TRIANGULAR, Cold);
 
         /* Reference SYRK: Cref := AA^T + Cref  */
         dtime_best = 1.0e9;
@@ -177,7 +178,7 @@ int main(int argc, char *argv[])
 
         i++;
     }
-
+    printf("We found 10 to be the optimal blocksize that improves performance, with larger numbers decreasing performance.\n");
     FLA_Finalize();
     return 0;
 }

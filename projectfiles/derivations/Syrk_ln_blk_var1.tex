@@ -3,7 +3,7 @@
 
 % Define the operation to be computed
 
-\renewcommand{\operation}{ \left[ C \right] := \mbox{\sc Syrk\_ln\_blk\_var1}( A, A, C ) }
+\renewcommand{\operation}{ \left[ C \right] := \mbox{\sc Syrk\_ln\_blk\_var1}( A, C ) }
 
 \renewcommand{\routinename}{\operation}
 
@@ -45,9 +45,9 @@ C = A_L A_L^T + \widehat{C}
   $
 ,
   $
-  A \rightarrow
+  A^T \rightarrow
   \left(\begin{array}{c I c}
-     A_L & A_R
+     A_L^T & A_R^T
   \end{array}\right)
   $
 }
@@ -98,7 +98,7 @@ $
   $
 ,
 $  
-  A \rightarrow
+  A^T \rightarrow
   \left(\begin{array}{c I c}
      A_L^T & A_R^T
   \end{array}\right)

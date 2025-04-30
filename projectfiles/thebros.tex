@@ -78,6 +78,9 @@ This allows us to express the state upon completion, the postcondition, as
 B = L^T \widehat B.
 \]
 It is implicitly assumed that $ L $ is nonunit lower triangular.
+
+\section{Purpose (BONUS)}
+This operation can be used when solving a set of linear system of equations with a symmetric matrix stored in the lower triangle ($A = LL^T$ or $A - LDL^T$). This is because the equation needs both Solve Ly=b via forward substitution and $L^Tx = y$ via backward substitution.
 \section{Partitioned Matrix Expressions and Loop Invariants}
 
 There are two PMEs for this operation.
@@ -141,7 +144,7 @@ From this, we can choose two loop invariants:
 	\end{array}\right)
 	= 
 	\left(\begin{array}{c}
-		L_{TR}\widehat B_T \\ \whline
+		L_{TL}\widehat B_T \\ \whline
 		\widehat B_B
 	\end{array}\right).	
 \label{eq:inv1}
@@ -156,7 +159,7 @@ From this, we can choose two loop invariants:
 		B_B
 	\end{array}\right) = 
 	\left(\begin{array}{c}
-		L_{TR} \widehat B_T + (L_{BL}^T)^T \widehat B_B  \\ \whline
+		L_{TL} \widehat B_T + (L_{BL}^T)^T \widehat B_B  \\ \whline
 		\widehat B_B
 	\end{array}\right).
 \label{eq:inv2}
@@ -225,15 +228,15 @@ From this, we can choose two more loop invariants:
 	\end{array}\right).
 \label{eq:inv4}
 \end{equation}\\
-	(The left part has been completely finished and the right part has been left untouched).
+	(The right part has been completely finished and the left part has been left untouched).
 \end{description}
 
 
 \section{Deriving the Algorithms}
 
-\subsection{Loop Invariant \eqref{eq:inv1}}
+\subsection{Loop Invariant 3}
 
-The unblocked algorithm for loop invariant \eqref{eq:inv3} is showing in Figure~\ref{fig:unb_inv1}. While the blocked algorithm for loop invariant \eqref{eq:inv3} is showing in Figure~\ref{fig:blk_inv3}.
+The unblocked algorithm for loop invariant 3 is showing in Figure~\ref{fig:unb_inv1}. While the blocked algorithm for loop invariant 3 is showing in Figure~\ref{fig:blk_inv3}.
 
 
 \resetsteps
@@ -244,7 +247,7 @@ The unblocked algorithm for loop invariant \eqref{eq:inv3} is showing in Figure~
 	\begin{center}
 		\FlaWorksheet
 	\end{center}
-	\caption{Unblocked Algorithm for Loop Invariant \eqref{eq:inv1}}
+	\caption{Unblocked Algorithm for Loop Invariant 3}
 	\label{fig:unb_inv1}
 \end{figure}
 
@@ -257,7 +260,7 @@ The unblocked algorithm for loop invariant \eqref{eq:inv3} is showing in Figure~
 	\begin{center}
 		\FlaWorksheet
 	\end{center}
-	\caption{Blocked Algorithm for Loop Invariant \eqref{eq:inv1}}
+	\caption{Blocked Algorithm for Loop Invariant 3}
 	\label{fig:blk_inv3}
 \end{figure}
 
@@ -292,8 +295,10 @@ C = \widehat C
 $ \widehat C $ denotes the original contents of $ C $.
 This allows us to express the state upon completion, the postcondition, as
 \[
-C = A A^T + C
+C = A A^T + \widehat{C}
 \]
+\section{Purpose (BONUS)}
+In computing Gram matrices, the operation efficiently accumulates inner products (which is useful for Gram Matrices) between data vectors, exploiting symmetry to reduce computation and storage. It is commonly used in kernel methods and PCA for similarity or covariance estimation.
 \section{Partitioned Matrix Expressions and Loop Invariants}
 
 \subsection{PME 1}
